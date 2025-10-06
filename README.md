@@ -1,19 +1,30 @@
-# clipboard
-### **1. 桌面應用 (Electron App) - 唯一的「收集者」(The Collector)**
+# React + TypeScript + Vite
 
-- **職責：** 這是整個系統**唯一的數據入口**。
-- **功能：**
-    - 在背景安靜地運行。
-    - **持續監聽**剪貼簿的變化。
-    - 一旦有新內容，立刻將其安全地**上傳**到你的後端伺服器 (Firebase)。
-    - 處理用戶登入。
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-### **2. 行動應用 (React Native App) - 純粹的「檢視器」(The Viewer/Consumer)**
+Currently, two official plugins are available:
 
-- **職責：** 讓用戶隨時隨地**取用**他們在電腦上收集的資料。
-- **它「不做」什麼：** 它**完全不需要**、也**不應該**嘗試在背景監聽手機的剪貼簿。
-- **核心功能：**
-    - **即時查看歷史記錄：** 打開 App，就能看到一個從最新到最舊排列的、從電腦同步過來的剪貼簿列表。
-    - **一鍵複製到手機：** 列表中的每一項旁邊都有一個「複製」按鈕。用戶看到需要的內容，點一下，就能立刻把它複製到手機的剪貼簿裡，然後去其他 App（如 LINE、瀏覽器）中貼上。
-    - **管理：** 提供刪除單筆或多筆記錄的功能。
-    - 處理用戶登入。
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
+```
+
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
