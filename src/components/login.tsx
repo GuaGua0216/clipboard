@@ -1,5 +1,4 @@
 import React from 'react'
-import tailwindcss from '@tailwindcss/vite'
 
 type LoginProps = {
   onLoginSuccess: () => void; // ⇐ 聲明接收這個 prop

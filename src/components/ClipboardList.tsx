@@ -1,4 +1,4 @@
-import tailwindcss from '@tailwindcss/vite'
+
 
 export default function ClipboardList() {
     return (
