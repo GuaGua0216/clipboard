@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 忽略所有 .env 相關的本地檔案
+*.env.local
+*.env
