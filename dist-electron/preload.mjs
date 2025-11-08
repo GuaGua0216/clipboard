@@ -1,22 +1,11 @@
 "use strict";
 const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("ipcRenderer", {
-  on(...args) {
-    const [channel, listener] = args;
-    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
-  },
-  off(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.off(channel, ...omit);
-  },
-  send(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.send(channel, ...omit);
-  },
-  invoke(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.invoke(channel, ...omit);
+electron.contextBridge.exposeInMainWorld("electronAPI", {
+  // 2. 我們定義一個*特定的*函式，叫做 onClipboardUpdate
+  //    (這個函式是給 React 介面呼叫的)
+  onClipboardUpdate: (callback) => {
+    electron.ipcRenderer.on("clipboard-updated", callback);
+    return () => electron.ipcRenderer.removeListener("clipboard-updated", callback);
   }
-  // You can expose other APTs you need here.
-  // ...
+  // (你原本的 'ipcRenderer' 物件 現在整個被移除了，變得更安全！)
 });

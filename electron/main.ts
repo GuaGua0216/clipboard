@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, clipboard } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -35,9 +36,28 @@ function createWindow() {
   })
 
   // Test active push message to Renderer-process.
+  // win.webContents.on('did-finish-load', () => {
+  //   win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  // })
+
+  // ⭐️ 3. 加入這段新的監聽邏輯
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
+    console.log('Renderer 載入完成，開始監聽剪貼簿...');
+    
+    let previousText = clipboard.readText(); // 儲存目前的文字
+
+    // 啟動一個計時器，每 1 秒檢查一次
+    setInterval(() => {
+      const currentText = clipboard.readText();
+      // 如果文字和上一次不同，且不是空的
+      if (currentText !== previousText && currentText.trim() !== '') {
+        previousText = currentText;
+        console.log('偵測到剪貼簿變化:', currentText);
+        // 透過 'clipboard-updated' 頻道發送新文字給 React 介面
+        win?.webContents.send('clipboard-updated', currentText);
+      }
+    }, 1000); // 1000ms = 1秒
+  });
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)

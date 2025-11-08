@@ -10,6 +10,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 
 // Use contextBridge
-window.ipcRenderer.on('main-process-message', (_event, message) => {
-  console.log(message)
-})
+// window.ipcRenderer.on('main-process-message', (_event, message) => {
+//   console.log(message)
+// })
+//原本來測試是否electron and react有成功的回傳訊息

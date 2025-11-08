@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, clipboard } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -18,7 +18,16 @@ function createWindow() {
     }
   });
   win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+    console.log("Renderer 載入完成，開始監聽剪貼簿...");
+    let previousText = clipboard.readText();
+    setInterval(() => {
+      const currentText = clipboard.readText();
+      if (currentText !== previousText && currentText.trim() !== "") {
+        previousText = currentText;
+        console.log("偵測到剪貼簿變化:", currentText);
+        win == null ? void 0 : win.webContents.send("clipboard-updated", currentText);
+      }
+    }, 1e3);
   });
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
