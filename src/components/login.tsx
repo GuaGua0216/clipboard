@@ -10,11 +10,11 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from 'firebase/app';
 
-type LoginProps = {
-  onLoginSuccess: () => void;
-}
+// type LoginProps = {
+//   onLoginSuccess: () => void;
+// }
 
-export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login() {
   // --- A. 狀態 ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +35,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       try {
         await signInWithEmailAndPassword(auth, email, password);
         console.log('Firebase 登入成功！');
-        onLoginSuccess();
+        // onLoginSuccess();
       } catch (error) {
         console.error("登入失敗:", error);
         let message = '登入失敗，請稍後再試。';
@@ -53,7 +53,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       try {
         await createUserWithEmailAndPassword(auth, email, password);
         console.log('Firebase 註冊成功！');
-        onLoginSuccess(); // 註冊後直接登入
+        // onLoginSuccess(); // 註冊後直接登入
       } catch (error) {
         console.error("註冊失敗:", error);
         let message = '註冊失敗';
@@ -80,7 +80,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     try {
       await signInWithPopup(auth, provider);
       console.log('Google 登入成功！');
-      onLoginSuccess();
+      // onLoginSuccess();
     } catch (error) {
       console.error("Google 登入失敗:", error);
       if (error instanceof FirebaseError && error.code !== 'auth/popup-closed-by-user') {
