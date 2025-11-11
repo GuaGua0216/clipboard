@@ -1,3 +1,12 @@
 @import "tailwindcss";
 
-
+/* ⭐️ 加入這段 ⭐️ */
+/* 重設 html, body 和 root，讓它們 100% 填滿視窗 */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  /* 永久隱藏瀏覽器層級的卷軸 */
+  overflow: hidden; 
+}
