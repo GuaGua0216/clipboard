@@ -14,8 +14,11 @@ import {
   serverTimestamp,
   orderBy,
   QueryDocumentSnapshot,
-  DocumentData
+  DocumentData,
+  doc,         // ⭐️ 新增：用於指定單一文件
+  deleteDoc    // ⭐️ 新增：用於刪除文件
 } from 'firebase/firestore';
+import { ClipboardDocumentIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 // 2. 定義剪貼簿項目的型別
 type ClipItem = {
@@ -37,6 +40,9 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
     // const [newItem, setNewItem] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // ⭐️ 6. 新增一個 state 來追蹤哪個項目被複製了
+    const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
     // 5. Firestore 集合參照 (保持不變)
     const itemsCollectionRef = collection(db, 'clipboards');
@@ -99,6 +105,8 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
       
     }, [user.uid]); // 依賴 user.uid
 
+    
+
     // ⭐️ 8. 「新增」的 useEffect (監聽 Electron)
     useEffect(() => {
       console.log('設定 Electron 剪貼簿監聽器...');
@@ -121,18 +129,49 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
     }, [user.uid, items]); // ⇐ 依賴 user.uid 和 items
     // (依賴 user.uid 確保登入後才監聽)
     // (依賴 items 確保 addNewItemToFirestore 能拿到最新的 items 列表來防重複)
+// ⭐️ 9. 新增：複製功能的函式
+    // (我們使用瀏覽器內建的剪貼簿 API)
+    const handleCopy = (id: string, text: string) => {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          console.log('已複製到剪貼簿:', text);
+          // 這裡您可以選擇性地加入一個 "已複製！" 的提示
+        })
+        .catch(err => {
+          console.error('複製失敗:', err);
+        });navigator.clipboard.writeText(text)
+        .then(() => {
+          console.log('已複製到剪貼簿:', text);
+          // 設定 ID，觸發打勾圖示
+          setCopiedItemId(id);
+          // 2 秒後自動移除打勾
+          setTimeout(() => {
+            setCopiedItemId(null);
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('複製失敗:', err);
+        });
+    };
+
+    // ⭐️ 10. 新增：刪除功能的函式
+    const handleDelete = async (id: string) => {
+      // 為了安全起見，您可以取消註解下面這行來增加確認步驟
+      // if (!confirm('確定要刪除這筆紀錄嗎？')) return;
+
+      console.log('刪除項目:', id);
+      try {
+        // 建立指向特定 ID 文件的參照
+        const itemDocRef = doc(db, 'clipboards', id);
+        // 呼叫 deleteDoc
+        await deleteDoc(itemDocRef);
+      } catch (err) {
+        console.error("刪除失敗:", err);
+        setError("刪除項目失敗。");
+      }
+    };
 
 
-    // ⭐️ 9. 修改「暫時的」表單提交函式
-    // const handleAddItem = async (e: React.FormEvent) => {
-    //   e.preventDefault();
-    //   if (newItem.trim() === '') return;
-      
-    //   // 呼叫我們在步驟 6 抽出來的共用函式
-    //   await addNewItemToFirestore(newItem); 
-      
-    //   setNewItem(''); // 清空 input
-    // };
 
     // 10. JSX (保持不變)
     return (
@@ -161,7 +200,7 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
                 {isLoading && <p className="text-center text-gray-400">載入資料中...</p>}
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-                {/* 動態列表 */}
+                {/* ⭐️ 14. 修改動態列表的 JSX 佈局 */}
                 <ul className="text-left max-h-60 overflow-y-auto border border-gray-700 rounded-lg">
                     {!isLoading && items.length === 0 && (
                       <li className="p-4 text-gray-500 text-center">你的雲端剪貼簿是空的</li>
@@ -170,9 +209,46 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
                     {items.map(item => (
                         <li 
                           key={item.id} 
-                          className="p-3 border-b border-gray-700 last:border-b-0"
+                          // (A) 保持 Flex 佈局，justify-between 會把左右推開
+                          className="flex items-center justify-between p-3 border-b border-gray-700 last:border-b-0"
                         >
-                          {item.text}
+                          {/* (B) 左側群組 (複製按鈕 + 文字) */}
+                          {/* 'flex-1' 和 'min-w-0' 是為了確保文字截斷(truncate)能正常運作 */}
+                          <div className="flex items-center flex-1 min-w-0">
+                            
+                            {/* 複製/打勾 按鈕 (最左邊) */}
+                            <div className="flex-shrink-0 w-5 h-5 mr-3">
+                              {copiedItemId === item.id ? (
+                                // 顯示打勾
+                                <CheckIcon className="w-5 h-5 text-green-500" />
+                              ) : (
+                                // 顯示複製按鈕
+                                <button
+                                  onClick={() => handleCopy(item.id, item.text)}
+                                  className="p-0 text-gray-400 hover:text-white transition-colors"
+                                  title="複製"
+                                >
+                                  <ClipboardDocumentIcon className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* 文字 (中間) */}
+                            <span className="truncate" title={item.text}>
+                              {item.text}
+                            </span>
+                          </div>
+
+                          {/* (C) 刪除按鈕 (最右邊) */}
+                          <div className="flex-shrink-0 ml-2">
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="p-1 text-red-500 hover:text-red-400 transition-colors"
+                              title="刪除"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
                         </li>
                     ))}
                 </ul>
