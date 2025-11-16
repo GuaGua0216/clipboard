@@ -24,11 +24,13 @@ import { FirebaseError } from 'firebase/app';
 
 // 你原本的 Props (用於通知父組件登入成功)
 // 你原本的 Props (用於通知父組件登入成功)
-type LoginProps = {
-  onLoginSuccess: () => void;
-}
+// type LoginProps = {
+//   onLoginSuccess: () => void;
+// }
+type LoginProps = {} // ⇐ 改成空物件
 
-export default function Login({ onLoginSuccess }: LoginProps) {
+// export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login({}: LoginProps) {
   // --- A. 加入 State ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +47,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       // 呼叫 Firebase 的 Email/Password 登入
       await signInWithEmailAndPassword(auth, email, password);
       console.log('Firebase 登入成功！');
-      onLoginSuccess(); // 呼叫 prop
+      // onLoginSuccess(); // 呼叫 prop
     } catch (error) {
       console.error("登入失敗:", error);
       let message = '登入失敗，請稍後再試。';
@@ -68,7 +70,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       // 呼叫 Firebase 的註冊
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('Firebase 註冊成功！');
-      onLoginSuccess(); // 註冊後通常也會直接登入
+      // onLoginSuccess(); // 註冊後通常也會直接登入
     } catch (error) {
       console.error("註冊失敗:", error);
       let message = '註冊失敗';
@@ -93,7 +95,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     try {
       await signInWithPopup(auth, provider);
       console.log('Google 登入成功！');
-      onLoginSuccess();
+      // onLoginSuccess();
     } catch (error) {
       console.error("Google 登入失敗:", error);
       // 如果不是使用者主動關閉視窗，才顯示錯誤

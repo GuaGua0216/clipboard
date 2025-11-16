@@ -16,7 +16,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 function App() {
   // 3. 我們需要兩個 state
   // isLoggedIn: 使用者是否登入
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // const [isLoggedIn, setIsLoggedIn] = useState(false)
   // isLoading: 是否還在向 Firebase 確認登入狀態
   const [isLoading, setIsLoading] = useState(true) 
   
@@ -35,12 +35,12 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // --- 使用者已登入 ---
-        setIsLoggedIn(true);
+        // setIsLoggedIn(true);
         setUser(user); // (可選) 儲存 user 物件
         console.log("監聽器：使用者已登入", user.email);
       } else {
         // --- 使用者已登出 ---
-        setIsLoggedIn(false);
+        // setIsLoggedIn(false);
         setUser(null);
         console.log("監聽器：使用者已登出");
       }
@@ -101,13 +101,17 @@ function App() {
         {isDarkMode ? '☀️' : '🌙'}
       </button>
       <div className="w-full h-full flex flex-col">
-        {!isLoggedIn ? (
+        {!user ? ( // (A)
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <Login onLoginSuccess={() => setIsLoggedIn(true)} />
+            {/* <Login onLoginSuccess={() => setIsLoggedIn(true)} /> */}
+            <Login /> {/* (B) */}
           </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <ClipboardList {...({ onLogout: handleLogout } as any)} />
+            {/* <ClipboardList {...({ onLogout: handleLogout } as any)} /> */}
+            {/* <ClipboardList user={user} onLogout={handleLogout} /> (C) */}
+            <ClipboardList user={user} onLogout={handleLogout} />
+            {/* 將 `user` prop 傳給 <ClipboardList> */}
           </div>
         )}
       </div>
