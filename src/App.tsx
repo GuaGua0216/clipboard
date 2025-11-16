@@ -104,13 +104,13 @@ function App() {
         {!user ? ( // (A)
           <div className="w-full h-full flex flex-col items-center justify-center">
             {/* <Login onLoginSuccess={() => setIsLoggedIn(true)} /> */}
-            <Login /> {/* (B) */}
+            <Login isDarkMode={isDarkMode} /> {/* (B) */}
           </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center">
             {/* <ClipboardList {...({ onLogout: handleLogout } as any)} /> */}
             {/* <ClipboardList user={user} onLogout={handleLogout} /> (C) */}
-            <ClipboardList user={user} onLogout={handleLogout} />
+            <ClipboardList user={user} onLogout={handleLogout} isDarkMode={isDarkMode} />
             {/* 將 `user` prop 傳給 <ClipboardList> */}
           </div>
         )}

@@ -27,15 +27,29 @@ import { FirebaseError } from 'firebase/app';
 // type LoginProps = {
 //   onLoginSuccess: () => void;
 // }
-type LoginProps = {} // ⇐ 改成空物件
+type LoginProps = { isDarkMode: boolean } // 依據 App 的主題狀態切換樣式
 
 // export default function Login({ onLoginSuccess }: LoginProps) {
-export default function Login({}: LoginProps) {
+export default function Login({ isDarkMode }: LoginProps) {
   // --- A. 加入 State ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState(''); // 用來顯示 Firebase 錯誤
   const [isLoading, setIsLoading] = useState(false); // 增加讀取狀態
+
+  const cardTone = isDarkMode
+    ? 'bg-blue-950 text-gray-100'
+    : 'bg-blue-100 text-gray-800';
+  const labelTone = isDarkMode ? 'text-gray-300' : 'text-gray-700';
+  const inputTone = isDarkMode
+    ? 'bg-gray-700 border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500'
+    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500';
+  const primaryButtonTone = isDarkMode
+    ? 'from-blue-500 to-blue-400 text-white hover:from-blue-600 hover:to-blue-500'
+    : 'from-blue-200 to-blue-100 text-blue-900 hover:from-blue-300 hover:to-blue-200';
+  const signupTone = isDarkMode
+    ? 'bg-blue-900 text-blue-100 hover:bg-blue-800'
+    : 'bg-blue-100 text-blue-900 hover:bg-blue-200 border border-blue-200';
 
   // --- B. Email/Password 登入 (你原本的 handleSubmit) ---
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,10 +124,10 @@ export default function Login({}: LoginProps) {
   // --- E. 你的 JSX 介面 ---
   return (
     <div className="max-w-md w-full mx-auto">
-      <div className="p-8 rounded-xl shadow-2xl transition-colors duration-300 bg-blue-100 dark:bg-blue-950 text-gray-800 dark:text-gray-100">
+      <div className={`p-8 rounded-xl shadow-2xl transition-colors duration-300 ${cardTone}`}>
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold">歡迎回來</h2>
-          <p className="text-gray-400 dark:text-gray-300">請登入以繼續</p>
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>請登入以繼續</p>
         </div>
         
         {/* 主要登入表單 */}
@@ -121,7 +135,7 @@ export default function Login({}: LoginProps) {
           <div className="flex items-center">
             <label
               htmlFor="email"
-              className="w-20 text-sm font-medium text-gray-300"
+              className={`w-20 text-sm font-medium ${labelTone}`}
             >
               電子郵件
             </label>
@@ -130,7 +144,7 @@ export default function Login({}: LoginProps) {
               id="email"
               name="email"
               required
-              className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
+              className={`flex-1 px-4 py-2 rounded-lg transition ${inputTone}`}
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -139,7 +153,7 @@ export default function Login({}: LoginProps) {
           <div className="flex items-center">
             <label
               htmlFor="password"
-              className="w-20 text-sm font-medium text-gray-300"
+              className={`w-20 text-sm font-medium ${labelTone}`}
             >
               密碼
             </label>
@@ -148,7 +162,7 @@ export default function Login({}: LoginProps) {
               id="password"
               name="password"
               required
-              className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
+              className={`flex-1 px-4 py-2 rounded-lg transition ${inputTone}`}
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -164,7 +178,7 @@ export default function Login({}: LoginProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2 px-4 rounded-lg shadow font-bold bg-gradient-to-r from-blue-500 to-blue-400 text-white hover:from-blue-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 mt-4 disabled:opacity-50"
+              className={`w-full py-2 px-4 rounded-lg shadow font-bold bg-gradient-to-r focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 mt-4 disabled:opacity-50 ${primaryButtonTone}`}
             >
               {isLoading ? '處理中...' : '登入'}
             </button>
@@ -187,7 +201,7 @@ export default function Login({}: LoginProps) {
             type="button"
             onClick={handleSignUp}
             disabled={isLoading}
-            className="w-full py-2 px-4 rounded-lg shadow font-bold bg-purple-400 dark:bg-blue-950 text-white dark:text-blue-100 hover:bg-purple-600 dark:hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 dark:focus:ring-blue-900 transition-all duration-200 disabled:opacity-50"
+            className={`w-full py-2 px-4 rounded-lg shadow font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-blue-900 transition-all duration-200 disabled:opacity-50 ${signupTone}`}
           >
             {isLoading ? '處理中...' : '使用 Email 註冊'}
           </button>

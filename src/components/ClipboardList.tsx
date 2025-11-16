@@ -32,9 +32,10 @@ type ClipItem = {
 type ClipboardListProps = {
   onLogout: () => void;
   user: User;
+  isDarkMode: boolean;
 }
 
-export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
+export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardListProps) {
     // 4. State (保持不變)
     const [items, setItems] = useState<ClipItem[]>([]);
     // const [newItem, setNewItem] = useState('');
@@ -174,11 +175,20 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
 
 
     // 10. JSX (保持不變)
+    const panelTone = isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900';
+    const subText = isDarkMode ? 'text-gray-400' : 'text-gray-600';
+    const borderTone = isDarkMode ? 'border-gray-700' : 'border-gray-200';
+    const listDivider = isDarkMode ? 'border-gray-700' : 'border-gray-200';
+    const copyButton = isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-blue-700';
+    const logoutButton = isDarkMode
+      ? 'bg-gray-700 text-white hover:bg-gray-600'
+      : 'bg-blue-200 text-blue-900 hover:bg-blue-300 border border-blue-300';
+
     return (
         <div className="max-w-3xl w-full mx-auto">
-            <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <div className={`p-8 rounded-lg shadow-lg ${panelTone}`}>
                 <h2 className="text-xl font-bold text-center mb-1">Clipboard History</h2>
-                <p className="text-center text-sm text-gray-400 mb-4">
+                <p className={`text-center text-sm mb-4 ${subText}`}>
                   歡迎，{user.email}
                 </p>
 
@@ -201,16 +211,16 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
                 {/* ⭐️ 14. 修改動態列表的 JSX 佈局 */}
-                <ul className="text-left max-h-60 overflow-y-auto border border-gray-700 rounded-lg">
+                <ul className={`text-left max-h-60 overflow-y-auto border rounded-lg ${borderTone}`}>
                     {!isLoading && items.length === 0 && (
-                      <li className="p-4 text-gray-500 text-center">你的雲端剪貼簿是空的</li>
+                      <li className={`p-4 text-center ${subText}`}>你的雲端剪貼簿是空的</li>
                     )}
                     
                     {items.map(item => (
                         <li 
                           key={item.id} 
                           // (A) 保持 Flex 佈局，justify-between 會把左右推開
-                          className="flex items-center justify-between p-3 border-b border-gray-700 last:border-b-0"
+                          className={`flex items-center justify-between p-3 border-b last:border-b-0 ${listDivider}`}
                         >
                           {/* (B) 左側群組 (複製按鈕 + 文字) */}
                           {/* 'flex-1' 和 'min-w-0' 是為了確保文字截斷(truncate)能正常運作 */}
@@ -225,7 +235,7 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
                                 // 顯示複製按鈕
                                 <button
                                   onClick={() => handleCopy(item.id, item.text)}
-                                  className="p-0 text-gray-400 hover:text-white transition-colors"
+                                  className={`p-0 transition-colors ${copyButton}`}
                                   title="複製"
                                 >
                                   <ClipboardDocumentIcon className="w-5 h-5" />
@@ -256,7 +266,7 @@ export default function ClipboardList({ onLogout, user }: ClipboardListProps) {
                 {/* 登出按鈕 */}
                 <button 
                   onClick={onLogout}
-                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-300 mt-6"
+                  className={`w-full py-2 px-4 rounded-lg transition-colors duration-300 mt-6 ${logoutButton}`}
                 >
                   登出
                 </button>
