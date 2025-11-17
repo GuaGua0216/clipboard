@@ -33,6 +33,8 @@ function createWindow() {
     },
   })
 
+  win.setMenu(null) // ⇐ 將選單列完全移除
+
   // Test active push message to Renderer-process.
   // win.webContents.on('did-finish-load', () => {
   //   win?.webContents.send('main-process-message', (new Date).toLocaleString())

@@ -15,6 +15,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.mjs")
     }
   });
+  win.setMenu(null);
   win.webContents.on("did-finish-load", () => {
     console.log("Renderer 載入完成，開始監聽剪貼簿...");
     let previousText = clipboard.readText();
