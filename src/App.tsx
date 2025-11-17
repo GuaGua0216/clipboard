@@ -6,9 +6,13 @@ import { auth } from './firebase/firebaseConfig'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 
 function App() {
-  // --- 1. 我們的 State ---
-  // (移除了 isLoggedIn，只保留這三個)
-  const [isLoading, setIsLoading] = useState(true);
+  // 3. 我們需要兩個 state
+  // isLoggedIn: 使用者是否登入
+  // const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // isLoading: 是否還在向 Firebase 確認登入狀態
+  const [isLoading, setIsLoading] = useState(true) 
+  
+  // 4. (可選) 儲存使用者資訊
   const [user, setUser] = useState<User | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false); // (保留你的深色模式)
 
@@ -41,12 +45,12 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // --- 使用者已登入 ---
-        // (只設定 user，不設定 isLoggedIn)
-        setUser(user); 
+        // setIsLoggedIn(true);
+        setUser(user); // (可選) 儲存 user 物件
         console.log("監聽器：使用者已登入", user.email);
       } else {
         // --- 使用者已登出 ---
-        // (只設定 user，不設定 isLoggedIn)
+        // setIsLoggedIn(false);
         setUser(null);
         console.log("監聽器：使用者已登出");
       }
@@ -104,21 +108,19 @@ function App() {
       >
         {isDarkMode ? '☀️' : '🌙'}
       </button>
-      {/* (⭐️ 修正：簡化內層 div，讓它置中) */}
-      <div className="w-full h-full flex items-center justify-center">
-        
-        {/* ⭐️ 關鍵修改：
-           * 不再使用 'isLoggedIn' 判斷
-           * 而是使用 'user' 是否存在來判斷
-           * 移除 'onLoginSuccess' prop
-           * 傳入 'user' prop 給 ClipboardList
-        */}
-        {user ? (
-          // 已登入：user 物件必定存在
-          <ClipboardList onLogout={handleLogout} user={user} />
+      <div className="w-full h-full flex flex-col">
+        {!user ? ( // (A)
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            {/* <Login onLoginSuccess={() => setIsLoggedIn(true)} /> */}
+            <Login isDarkMode={isDarkMode} /> {/* (B) */}
+          </div>
         ) : (
-          // 未登入
-          <Login /> 
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            {/* <ClipboardList {...({ onLogout: handleLogout } as any)} /> */}
+            {/* <ClipboardList user={user} onLogout={handleLogout} /> (C) */}
+            <ClipboardList user={user} onLogout={handleLogout} isDarkMode={isDarkMode} />
+            {/* 將 `user` prop 傳給 <ClipboardList> */}
+          </div>
         )}
       </div>
     </div>

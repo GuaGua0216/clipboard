@@ -14,13 +14,16 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from 'firebase/app';
 
-// 1. 移除 LoginProps 和 onLoginSuccess
+// 你原本的 Props (用於通知父組件登入成功)
+// 你原本的 Props (用於通知父組件登入成功)
 // type LoginProps = {
 //   onLoginSuccess: () => void;
 // }
+type LoginProps = { isDarkMode: boolean } // 依據 App 的主題狀態切換樣式
 
-export default function Login() { // ⇐ 移除 props
-  // --- A. 狀態 ---
+// export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login({ isDarkMode }: LoginProps) {
+  // --- A. 加入 State ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -29,47 +32,65 @@ export default function Login() { // ⇐ 移除 props
   // 新增一個狀態來切換模式
   const [isLoginMode, setIsLoginMode] = useState(true); // 預設為 true (登入模式)
 
-  // --- B. 主要提交函式 (會根據模式切換) ---
+  const cardTone = isDarkMode
+    ? 'bg-blue-950 text-gray-100'
+    : 'bg-blue-100 text-gray-800';
+  const labelTone = isDarkMode ? 'text-gray-300' : 'text-gray-700';
+  const inputTone = isDarkMode
+    ? 'bg-gray-700 border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500'
+    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500';
+  const primaryButtonTone = isDarkMode
+    ? 'from-blue-500 to-blue-400 text-white hover:from-blue-600 hover:to-blue-500'
+    : 'from-blue-200 to-blue-100 text-blue-900 hover:from-blue-300 hover:to-blue-200';
+  const signupTone = isDarkMode
+    ? 'bg-blue-900 text-blue-100 hover:bg-blue-800'
+    : 'bg-blue-100 text-blue-900 hover:bg-blue-200 border border-blue-200';
+
+  // --- B. Email/Password 登入 (你原本的 handleSubmit) ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setIsLoading(true);
 
-    if (isLoginMode) {
-      // --- 登入邏輯 ---
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        console.log('Firebase 登入成功！');
-        // (移除 onLoginSuccess())
-      } catch (error) {
-        console.error("登入失敗:", error);
-        let message = '登入失敗，請稍後再試。';
-        if (error instanceof FirebaseError) {
-          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            message = '電子郵件或密碼錯誤';
-          }
+    try {
+      // 呼叫 Firebase 的 Email/Password 登入
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Firebase 登入成功！');
+      // onLoginSuccess(); // 呼叫 prop
+    } catch (error) {
+      console.error("登入失敗:", error);
+      let message = '登入失敗，請稍後再試。';
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          message = '電子郵件或密碼錯誤';
         }
         setErrorMsg(message);
       } finally {
         setIsLoading(false);
       }
-    } else {
-      // --- 註冊邏輯 ---
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        console.log('Firebase 註冊成功！');
-        // (移除 onLoginSuccess())
-      } catch (error) {
-        console.error("註冊失敗:", error);
-        let message = '註冊失敗';
-        if (error instanceof FirebaseError) {
-          if (error.code === 'auth/weak-password') {
-            message = '密碼強度不足 (至少 6 個字元)';
-          } else if (error.code === 'auth/email-already-in-use') {
-            message = '這個 Email 已經被註冊了';
-          } else if (error.code === 'auth/invalid-email') { // ⇐ 加上這個
-            message = '請輸入有效的 Email 格式';
-          }
+      setErrorMsg(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // --- C. Email/Password 註冊 ---
+  const handleSignUp = async () => {
+    setErrorMsg('');
+    setIsLoading(true);
+    try {
+      // 呼叫 Firebase 的註冊
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log('Firebase 註冊成功！');
+      // onLoginSuccess(); // 註冊後通常也會直接登入
+    } catch (error) {
+      console.error("註冊失敗:", error);
+      let message = '註冊失敗';
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/weak-password') {
+          message = '密碼強度不足 (至少 6 個字元)';
+        } else if (error.code === 'auth/email-already-in-use') {
+          message = '這個 Email 已經被註冊了';
         }
         setErrorMsg(message);
       } finally {
@@ -86,7 +107,7 @@ export default function Login() { // ⇐ 移除 props
     try {
       await signInWithPopup(auth, provider);
       console.log('Google 登入成功！');
-      // (移除 onLoginSuccess())
+      // onLoginSuccess();
     } catch (error) {
       console.error("Google 登入失敗:", error);
       if (error instanceof FirebaseError && error.code !== 'auth/popup-closed-by-user') {
@@ -106,17 +127,10 @@ export default function Login() { // ⇐ 移除 props
   // --- D. 你的 JSX 介面 (已修改) ---
   return (
     <div className="max-w-md w-full mx-auto">
-      {/* ⭐️ 整合你的深色模式 class */}
-      <div className="p-8 rounded-xl shadow-2xl transition-colors duration-300 bg-blue-100 dark:bg-blue-950 text-gray-800 dark:text-gray-100">
-        
-        {/* 標題和副標題根據模式改變 */}
+      <div className={`p-8 rounded-xl shadow-2xl transition-colors duration-300 ${cardTone}`}>
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold">
-            {isLoginMode ? '歡迎回來' : '建立您的帳號'}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300"> {/* 調整了顏色 */}
-            {isLoginMode ? '請登入以繼續' : '請輸入資訊以註冊'}
-          </p>
+          <h2 className="text-2xl font-bold">歡迎回來</h2>
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>請登入以繼續</p>
         </div>
         
         {/* 表單統一由 handleSubmit 處理 */}
@@ -124,7 +138,7 @@ export default function Login() { // ⇐ 移除 props
           <div className="flex items-center">
             <label
               htmlFor="email"
-              className="w-20 text-sm font-medium text-gray-700 dark:text-gray-300" // ⇐ 調整顏色
+              className={`w-20 text-sm font-medium ${labelTone}`}
             >
               電子郵件
             </label>
@@ -133,8 +147,7 @@ export default function Login() { // ⇐ 移除 props
               id="email"
               name="email"
               required
-              // ⭐️ 整合你的深色模式 class (並修復了 bug)
-              className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition text-gray-800 dark:text-gray-100"
+              className={`flex-1 px-4 py-2 rounded-lg transition ${inputTone}`}
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -143,7 +156,7 @@ export default function Login() { // ⇐ 移除 props
           <div className="flex items-center">
             <label
               htmlFor="password"
-              className="w-20 text-sm font-medium text-gray-700 dark:text-gray-300" // ⇐ 調整顏色
+              className={`w-20 text-sm font-medium ${labelTone}`}
             >
               密碼
             </label>
@@ -152,8 +165,7 @@ export default function Login() { // ⇐ 移除 props
               id="password"
               name="password"
               required
-              // ⭐️ 整合你的深色模式 class (並修復了 bug)
-              className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition text-gray-800 dark:text-gray-100"
+              className={`flex-1 px-4 py-2 rounded-lg transition ${inputTone}`}
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -169,8 +181,7 @@ export default function Login() { // ⇐ 移除 props
             <button
               type="submit"
               disabled={isLoading}
-              // ⭐️ 整合你的深色模式 class
-              className="w-full py-2 px-4 rounded-lg shadow font-bold bg-gradient-to-r from-blue-500 to-blue-400 text-white hover:from-blue-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 mt-4 disabled:opacity-50"
+              className={`w-full py-2 px-4 rounded-lg shadow font-bold bg-gradient-to-r focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 mt-4 disabled:opacity-50 ${primaryButtonTone}`}
             >
               {isLoading ? '處理中...' : (isLoginMode ? '登入' : '註冊')}
             </button>
@@ -191,6 +202,14 @@ export default function Login() { // ⇐ 移除 props
         
         {/* Google 登入按鈕 */}
         <div className="space-y-4">
+          <button
+            type="button"
+            onClick={handleSignUp}
+            disabled={isLoading}
+            className={`w-full py-2 px-4 rounded-lg shadow font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-blue-900 transition-all duration-200 disabled:opacity-50 ${signupTone}`}
+          >
+            {isLoading ? '處理中...' : '使用 Email 註冊'}
+          </button>
           <button
             type="button"
             onClick={handleGoogleLogin}
