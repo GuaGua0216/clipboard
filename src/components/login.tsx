@@ -45,6 +45,7 @@ export default function Login({ isDarkMode }: LoginProps) {
   const signupTone = isDarkMode
     ? 'bg-blue-900 text-blue-100 hover:bg-blue-800'
     : 'bg-blue-100 text-blue-900 hover:bg-blue-200 border border-blue-200';
+  const separatorBg = isDarkMode ? 'bg-blue-950' : 'bg-blue-100';
 
   // --- B. Email/Password 登入 (你原本的 handleSubmit) ---
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,7 +192,7 @@ export default function Login({ isDarkMode }: LoginProps) {
             <div className="w-full border-t border-gray-400 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 text-gray-500 dark:text-gray-400">
+            <span className={`px-3 py-1 rounded-full ${separatorBg} text-gray-500 dark:text-gray-400`}>
               或者
             </span>
           </div>
