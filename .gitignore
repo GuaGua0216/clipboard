@@ -26,3 +26,6 @@ dist-ssr
 # 忽略所有 .env 相關的本地檔案
 *.env.local
 *.env
+
+# 忽略 electron-builder 的打包輸出資料夾
+/release
