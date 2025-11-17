@@ -1,7 +1,7 @@
 // 檔案： src/components/ClipboardList.tsx
 // ⭐️ 這是使用「Heroicons」的最終版 ⭐️
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { db } from '../firebase/firebaseConfig';
 import { 
@@ -17,10 +17,10 @@ import {
   doc,         // ⭐️ 新增：用於指定單一文件
   deleteDoc    // ⭐️ 新增：用於刪除文件
 } from 'firebase/firestore';
-import { ClipboardDocumentIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+// import { ClipboardDocumentIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 // 1. ⭐️ 從 Heroicons 匯入我們需要的圖示
-import { ClipboardIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 
 // --- 型別定義 (保持不變) ---
@@ -41,20 +41,17 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
     const [items, setItems] = useState<ClipItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [copiedId, setCopiedId] = useState<string | null>(null);
-
-    // ⭐️ 6. 新增一個 state 來追蹤哪個項目被複製了
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
     // 5. Firestore 集合參照 (保持不變)
-    const itemsCollectionRef = collection(db, 'clipboards');
+    const itemsCollectionRef = useMemo(() => collection(db, 'clipboards'), []);
 
     // --- 所有函式 (addNewItemToFirestore, handleDeleteItem, handleCopyItem) ---
     // --- 和所有 useEffect (讀取 Firestore, 監聽 Electron) ---
     // --- (全部保持不變，你不需要修改它們) ---
     
     // ... (addNewItemToFirestore 函式) ...
-    const addNewItemToFirestore = async (text: string) => {
+    const addNewItemToFirestore = useCallback(async (text: string) => {
       if (items.find(item => item.text === text)) {
         console.log("項目已存在，跳過新增:", text);
         return;
@@ -69,34 +66,7 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
       } catch (err) {
         console.error("自動新增失敗:", err);
       }
-    };
-    
-    // ... (handleDeleteItem 函式) ...
-    const handleDeleteItem = async (id: string) => {
-      console.log("正在刪除:", id);
-      try {
-        const itemDocRef = doc(db, 'clipboards', id);
-        await deleteDoc(itemDocRef);
-      } catch (err) {
-        console.error("刪除失敗:", err);
-        setError("刪除項目失敗。");
-      }
-    };
-
-    // ... (handleCopyItem 函式) ...
-    const handleCopyItem = async (id: string, text: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopiedId(id);
-        console.log("已複製:", text);
-        setTimeout(() => {
-          setCopiedId(null);
-        }, 1500);
-      } catch (err) {
-        console.error("複製失敗:", err);
-        setError("複製到剪貼簿失敗。");
-      }
-    };
+    }, [items, itemsCollectionRef, user.uid]);
     
     // ... (useEffect - 讀取 Firestore) ...
     useEffect(() => {
@@ -126,7 +96,7 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
       });
       return () => unsubscribe();
       
-    }, [user.uid]); // 依賴 user.uid
+    }, [itemsCollectionRef, user.uid]); // 依賴 user.uid
 
     
 
@@ -141,20 +111,13 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
         removeListener();
       };
       
-    }, [user.uid, items]); // ⇐ 依賴 user.uid 和 items
+    }, [addNewItemToFirestore, user.uid]); // ⇐ 依賴 user.uid
     // (依賴 user.uid 確保登入後才監聽)
-    // (依賴 items 確保 addNewItemToFirestore 能拿到最新的 items 列表來防重複)
+    // (依賴 addNewItemToFirestore 確保使用最新 callback)
 // ⭐️ 9. 新增：複製功能的函式
     // (我們使用瀏覽器內建的剪貼簿 API)
-    const handleCopy = (id: string, text: string) => {
+    const handleCopy = useCallback((id: string, text: string) => {
       navigator.clipboard.writeText(text)
-        .then(() => {
-          console.log('已複製到剪貼簿:', text);
-          // 這裡您可以選擇性地加入一個 "已複製！" 的提示
-        })
-        .catch(err => {
-          console.error('複製失敗:', err);
-        });navigator.clipboard.writeText(text)
         .then(() => {
           console.log('已複製到剪貼簿:', text);
           // 設定 ID，觸發打勾圖示
@@ -167,7 +130,7 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
         .catch(err => {
           console.error('複製失敗:', err);
         });
-    };
+    }, []);
 
     // ⭐️ 10. 新增：刪除功能的函式
     const handleDelete = async (id: string) => {

@@ -64,9 +64,6 @@ export default function Login({ isDarkMode }: LoginProps) {
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
           message = '電子郵件或密碼錯誤';
         }
-        setErrorMsg(message);
-      } finally {
-        setIsLoading(false);
       }
       setErrorMsg(message);
     } finally {
@@ -92,10 +89,10 @@ export default function Login({ isDarkMode }: LoginProps) {
         } else if (error.code === 'auth/email-already-in-use') {
           message = '這個 Email 已經被註冊了';
         }
-        setErrorMsg(message);
-      } finally {
-        setIsLoading(false);
       }
+      setErrorMsg(message);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -194,7 +191,7 @@ export default function Login({ isDarkMode }: LoginProps) {
             <div className="w-full border-t border-gray-400 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-blue-100 dark:bg-blue-950 text-gray-500 dark:text-gray-400">
+            <span className="px-2 text-gray-500 dark:text-gray-400">
               或者
             </span>
           </div>

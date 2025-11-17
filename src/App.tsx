@@ -70,7 +70,7 @@ function App() {
   // --- 5. 渲染邏輯 (合併) ---
   
   // (⭐️ 修正：統一管理背景色)
-  const backgroundClass = "bg-blue-200 dark:bg-blue-950";
+  const backgroundClass = isDarkMode ? 'bg-blue-950' : 'bg-blue-200';
 
   // (A) 載入中 (保留你的版本，並修正 class)
   if (isLoading) {
