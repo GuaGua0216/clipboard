@@ -33,7 +33,7 @@ export default function Login({ isDarkMode }: LoginProps) {
   const [isLoginMode, setIsLoginMode] = useState(true); // 預設為 true (登入模式)
 
   const cardTone = isDarkMode
-    ? 'bg-blue-950 text-gray-100'
+    ? 'bg-slate-800 text-gray-100'
     : 'bg-blue-100 text-gray-800';
   const labelTone = isDarkMode ? 'text-gray-300' : 'text-gray-700';
   const inputTone = isDarkMode
@@ -43,9 +43,9 @@ export default function Login({ isDarkMode }: LoginProps) {
     ? 'from-blue-500 to-blue-400 text-white hover:from-blue-600 hover:to-blue-500'
     : 'from-blue-200 to-blue-100 text-blue-900 hover:from-blue-300 hover:to-blue-200';
   const signupTone = isDarkMode
-    ? 'bg-blue-900 text-blue-100 hover:bg-blue-800'
+    ? 'bg-slate-700 text-blue-100 hover:bg-slate-600'
     : 'bg-blue-100 text-blue-900 hover:bg-blue-200 border border-blue-200';
-  const separatorBg = isDarkMode ? 'bg-blue-950' : 'bg-blue-100';
+  const separatorBg = isDarkMode ? 'bg-slate-800' : 'bg-blue-100';
 
   // --- B. Email/Password 登入 (你原本的 handleSubmit) ---
   const handleSubmit = async (e: React.FormEvent) => {

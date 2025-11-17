@@ -152,11 +152,11 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
 
 
     // 10. JSX (保持不變)
-    const panelTone = isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900';
+    const panelTone = isDarkMode ? 'bg-slate-800 text-gray-100' : 'bg-white text-gray-900';
     const subText = isDarkMode ? 'text-gray-400' : 'text-gray-600';
-    const borderTone = isDarkMode ? 'border-gray-700' : 'border-gray-200';
-    const listDivider = isDarkMode ? 'border-gray-700' : 'border-gray-200';
-    const copyButton = isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-blue-700';
+    const borderTone = isDarkMode ? 'border-slate-700' : 'border-gray-200';
+    const listDivider = isDarkMode ? 'border-slate-700' : 'border-gray-200';
+    const copyButton = isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-blue-700';
     const logoutButton = isDarkMode
       ? 'bg-gray-700 text-white hover:bg-gray-600'
       : 'bg-blue-200 text-blue-900 hover:bg-blue-300 border border-blue-300';
