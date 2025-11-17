@@ -1,9 +1,8 @@
 // 檔案： src/components/ClipboardList.tsx
+// ⭐️ 這是使用「Heroicons」的最終版 ⭐️
 
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
-
-// 1. 匯入 Firestore 相關函式和 db 物件
 import { db } from '../firebase/firebaseConfig';
 import { 
   collection, 
@@ -20,15 +19,17 @@ import {
 } from 'firebase/firestore';
 import { ClipboardDocumentIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-// 2. 定義剪貼簿項目的型別
+// 1. ⭐️ 從 Heroicons 匯入我們需要的圖示
+import { ClipboardIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+
+
+// --- 型別定義 (保持不變) ---
 type ClipItem = {
   id: string;
   text: string;
   createdAt: Date | null;
   userId: string;
 }
-
-// 3. Props 型別 (保持不變)
 type ClipboardListProps = {
   onLogout: () => void;
   user: User;
@@ -38,9 +39,9 @@ type ClipboardListProps = {
 export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardListProps) {
     // 4. State (保持不變)
     const [items, setItems] = useState<ClipItem[]>([]);
-    // const [newItem, setNewItem] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
     // ⭐️ 6. 新增一個 state 來追蹤哪個項目被複製了
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
@@ -48,16 +49,16 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
     // 5. Firestore 集合參照 (保持不變)
     const itemsCollectionRef = collection(db, 'clipboards');
 
-    // ⭐️ 6. 把「新增邏輯」抽成一個獨立函式
-    //    (這樣「測試表單」和「剪貼簿監聽」才能共用)
+    // --- 所有函式 (addNewItemToFirestore, handleDeleteItem, handleCopyItem) ---
+    // --- 和所有 useEffect (讀取 Firestore, 監聽 Electron) ---
+    // --- (全部保持不變，你不需要修改它們) ---
+    
+    // ... (addNewItemToFirestore 函式) ...
     const addNewItemToFirestore = async (text: string) => {
-      // 檢查一下，避免重複新增
-      // (我們檢查 items state 中是否已有相同的*文字*)
       if (items.find(item => item.text === text)) {
         console.log("項目已存在，跳過新增:", text);
         return;
       }
-      
       console.log("從剪貼簿新增項目到 Firestore:", text);
       try {
         await addDoc(itemsCollectionRef, {
@@ -67,22 +68,44 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
         });
       } catch (err) {
         console.error("自動新增失敗:", err);
-        // (這裡可以選擇性地顯示錯誤，但可能會有點吵)
-        // setError("自動新增剪貼簿失敗。");
+      }
+    };
+    
+    // ... (handleDeleteItem 函式) ...
+    const handleDeleteItem = async (id: string) => {
+      console.log("正在刪除:", id);
+      try {
+        const itemDocRef = doc(db, 'clipboards', id);
+        await deleteDoc(itemDocRef);
+      } catch (err) {
+        console.error("刪除失敗:", err);
+        setError("刪除項目失敗。");
       }
     };
 
-    // ⭐️ 7. 你的第一個 useEffect (從 Firestore *讀取*)
-    //    (這整段程式碼*保持原樣*，完全不用動！)
+    // ... (handleCopyItem 函式) ...
+    const handleCopyItem = async (id: string, text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        console.log("已複製:", text);
+        setTimeout(() => {
+          setCopiedId(null);
+        }, 1500);
+      } catch (err) {
+        console.error("複製失敗:", err);
+        setError("複製到剪貼簿失敗。");
+      }
+    };
+    
+    // ... (useEffect - 讀取 Firestore) ...
     useEffect(() => {
       setError(null);
-      
       const q = query(
         itemsCollectionRef, 
         where('userId', '==', user.uid),
         orderBy('createdAt', 'desc')
       );
-      
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const firestoreItems: ClipItem[] = [];
         querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
@@ -101,7 +124,6 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
         setError("無法載入資料。請確認 Firestore 安全規則是否已設定。");
         setIsLoading(false);
       });
-
       return () => unsubscribe();
       
     }, [user.uid]); // 依賴 user.uid
@@ -111,17 +133,9 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
     // ⭐️ 8. 「新增」的 useEffect (監聽 Electron)
     useEffect(() => {
       console.log('設定 Electron 剪貼簿監聽器...');
-      
-      // 呼叫我們在 preload.ts 和 electron-env.d.ts 建立的 API
-      // 它會回傳一個「取消函式」
       const removeListener = window.electronAPI.onClipboardUpdate((_event, newText) => {
-        // 收到來自 main.ts 的新文字！
-        
-        // 呼叫我們在步驟 6 抽出來的共用函式
         addNewItemToFirestore(newText);
       });
-
-      // 在組件卸載 (unmount) 時，執行「取消函式」
       return () => {
         console.log('移除 Electron 剪貼簿監聽器');
         removeListener();
@@ -192,20 +206,6 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
                   歡迎，{user.email}
                 </p>
 
-                {/* 暫時的測試表單 */}
-                {/* <form onSubmit={handleAddItem} className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={newItem}
-                    onChange={(e) => setNewItem(e.target.value)}
-                    placeholder="輸入測試文字..."
-                    className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
-                  />
-                  <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                    新增
-                  </button>
-                </form> */}
-
                 {/* 錯誤或載入狀態 */}
                 {isLoading && <p className="text-center text-gray-400">載入資料中...</p>}
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -263,7 +263,7 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
                     ))}
                 </ul>
 
-                {/* 登出按鈕 */}
+                {/* 登出按鈕 (保持不變) */}
                 <button 
                   onClick={onLogout}
                   className={`w-full py-2 px-4 rounded-lg transition-colors duration-300 mt-6 ${logoutButton}`}

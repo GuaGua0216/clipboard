@@ -1,17 +1,9 @@
-import { useState, useEffect } from 'react' // ⇐ 1. 匯入 useEffect
+import { useState, useEffect } from 'react'
 import './App.css'
 import Login from './components/login'
 import ClipboardList from './components/ClipboardList'
-//import tailwindcss from '@tailwindcss/vite' // <-- 這行通常在 vite.config.ts，放在這可能無效
-
-// 2. 匯入 Firebase 的 auth 和相關函式
-import { auth } from './firebase/firebaseConfig' // ⇐ 確保路徑正確
+import { auth } from './firebase/firebaseConfig'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
-
-// 註解掉你舊的 Page type 和 NavBar，因為我們現在用 isLoggedIn 來控制
-// type Page = 'home' | 'login'
-// ... (NavBar 和 Home 的註解) ...
-
 
 function App() {
   // 3. 我們需要兩個 state
@@ -22,16 +14,34 @@ function App() {
   
   // 4. (可選) 儲存使用者資訊
   const [user, setUser] = useState<User | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false); // (保留你的深色模式)
 
-  // 顏色模式 state
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // 切換 dark/light mode
+  // --- 2. 你的深色模式切換 (保留) ---
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
-
-  // 5. App 啟動時，設定 Firebase 監聽器
+  
+  // (⭐️ 新增：讓深色模式持久化，並更新 <html> 標籤)
   useEffect(() => {
-    // onAuthStateChanged 會回傳一個 "unsubscribe" 函式
+    // 檢查 localStorage 中儲存的偏好
+    const savedMode = localStorage.getItem('darkMode');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialMode = savedMode !== null ? (savedMode === 'true') : prefersDark;
+    
+    setIsDarkMode(initialMode);
+  }, []); // 僅在 App 啟動時檢查一次
+
+  // 當 isDarkMode 狀態改變時，更新 class 和 localStorage
+  useEffect(() => {
+    localStorage.setItem('darkMode', String(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+
+  // --- 3. Firebase 監聽器 (修改) ---
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // --- 使用者已登入 ---
@@ -44,40 +54,38 @@ function App() {
         setUser(null);
         console.log("監聽器：使用者已登出");
       }
-      // 無論登入或登出，都代表檢查完畢
       setIsLoading(false);
     });
 
-    // 在組件卸載 (unmount) 時，取消監聽
     return () => unsubscribe();
-    
-  }, []); // 空依賴陣列 [] 表示這個 effect 只在 App 首次載入時執行一次
+  }, []); 
 
-
-  // 6. 建立登出函式，並傳給 ClipboardList
+  // --- 4. 登出函式 (保留) ---
   const handleLogout = () => {
     signOut(auth).catch((error) => {
       console.error("登出失敗:", error);
     });
-    // 呼叫 signOut 後，上面的 onAuthStateChanged 會自動被觸發
-    // 並將 isLoggedIn 設為 false
   }
 
-  // 7. 渲染邏輯
-  // (A) 如果還在檢查登入狀態，顯示「載入中...」
+  // --- 5. 渲染邏輯 (合併) ---
+  
+  // (⭐️ 修正：統一管理背景色)
+  const backgroundClass = "bg-blue-200 dark:bg-blue-950";
+
+  // (A) 載入中 (保留你的版本，並修正 class)
   if (isLoading) {
     return (
       <div id="app-container"
-        className={`w-screen h-screen flex flex-col ${isDarkMode ? 'dark' : ''} ${isDarkMode ? 'bg-blue-300' : 'bg-blue-200'}`}
+        // (⭐️ 修正：使用 w-full h-full 並套用統一背景)
+        className={`w-full h-full flex flex-col ${backgroundClass} transition-colors duration-300`}
       >
-        {/* 右上角模式切換按鈕 */}
         <button
           className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 rounded-full shadow px-3 py-2 text-lg"
           onClick={toggleDarkMode}
         >
           {isDarkMode ? '☀️' : '🌙'}
         </button>
-        <div className="w-full h-full flex flex-col items-center justify-center">
+        <div className="w-full h-full flex items-center justify-center"> {/* 簡化 */}
           <svg className="animate-spin h-10 w-10 text-blue-400 dark:text-yellow-300 mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
@@ -88,12 +96,12 @@ function App() {
     )
   }
 
-  // (B) 檢查完畢，根據 isLoggedIn 顯示 登入頁 或 主頁
+  // (B) 載入完成 (保留你的深色模式，但修改渲染邏輯)
   return (
     <div id="app-container"
-      className={`w-screen h-screen flex flex-col ${isDarkMode ? 'dark' : ''} ${isDarkMode ? 'bg-blue-950' : 'bg-blue-200'}`}
+      // (⭐️ 修正：使用 w-full h-full 並套用統一背景)
+      className={`w-full h-full flex flex-col ${backgroundClass} transition-colors duration-300`}
     >
-      {/* 右上角模式切換按鈕 */}
       <button
         className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 rounded-full shadow px-3 py-2 text-lg"
         onClick={toggleDarkMode}
