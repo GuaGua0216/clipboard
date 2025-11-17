@@ -100,20 +100,31 @@ export default function ClipboardList({ onLogout, user, isDarkMode }: ClipboardL
 
     
 
-    // ⭐️ 8. 「新增」的 useEffect (監聽 Electron)
-    useEffect(() => {
-      console.log('設定 Electron 剪貼簿監聽器...');
-      const removeListener = window.electronAPI.onClipboardUpdate((_event, newText) => {
-        addNewItemToFirestore(newText);
-      });
-      return () => {
-        console.log('移除 Electron 剪貼簿監聽器');
-        removeListener();
-      };
-      
-    }, [addNewItemToFirestore, user.uid]); // ⇐ 依賴 user.uid
-    // (依賴 user.uid 確保登入後才監聽)
-    // (依賴 addNewItemToFirestore 確保使用最新 callback)
+// src/components/ClipboardList.tsx (修改後)
+
+
+useEffect(() => {
+  // 👇 關鍵修改：檢查 window.electronAPI 是否存在
+  if (window.electronAPI) {
+    // 這是原本的 Electron 監聽邏輯，現在被 if 包起來了
+    console.log('設定 Electron 剪貼簿監聽器...');
+    const removeListener = window.electronAPI.onClipboardUpdate((_event, newText) => {
+      addNewItemToFirestore(newText);
+    });
+
+    return () => {
+      console.log('移除 Electron 剪貼簿監聽器');
+      removeListener();
+    };
+  } else {
+    // 👇 新增：在非 Electron 環境下的處理 (例如手機 App)
+    console.log('非 Electron 環境 (可能是手機)，略過監聽功能');
+    // 在這裡可以選擇加入手機 App 的專屬邏輯，如果有的話
+  }
+}, [addNewItemToFirestore, user.uid]); 
+
+
+
 // ⭐️ 9. 新增：複製功能的函式
     // (我們使用瀏覽器內建的剪貼簿 API)
     const handleCopy = useCallback((id: string, text: string) => {
