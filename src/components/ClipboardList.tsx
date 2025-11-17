@@ -1,7 +1,7 @@
 // 檔案： src/components/ClipboardList.tsx
 // ⭐️ 這是使用「Heroicons」的最終版 ⭐️
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { db } from '../firebase/firebaseConfig';
 import { 

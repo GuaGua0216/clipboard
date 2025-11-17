@@ -1,8 +1,9 @@
 {
   "name": "clipboard",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "A clipboard manager application built with Electron, React, and Firebase.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
