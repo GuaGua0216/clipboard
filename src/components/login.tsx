@@ -47,23 +47,35 @@ export default function Login({ isDarkMode }: LoginProps) {
     : 'bg-blue-100 text-blue-900 hover:bg-blue-200 border border-blue-200';
   const separatorBg = isDarkMode ? 'bg-slate-800' : 'bg-blue-100';
 
-  // --- B. Email/Password 登入 (你原本的 handleSubmit) ---
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  type AuthMode = 'login' | 'signup';
+
+  // 單一函式依模式登入或註冊，避免按下「註冊」仍走登入流程
+  const handleAuth = async (mode: AuthMode) => {
     setErrorMsg('');
     setIsLoading(true);
 
     try {
-      // 呼叫 Firebase 的 Email/Password 登入
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Firebase 登入成功！');
-      // onLoginSuccess(); // 呼叫 prop
+      if (mode === 'login') {
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log('Firebase 登入成功！');
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Firebase 註冊成功！');
+      }
     } catch (error) {
-      console.error("登入失敗:", error);
-      let message = '登入失敗，請稍後再試。';
+      console.error(`使用者${mode === 'login' ? '登入' : '註冊'}失敗:`, error);
+      let message = mode === 'login' ? '登入失敗，請稍後再試。' : '註冊失敗';
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          message = '電子郵件或密碼錯誤';
+        if (mode === 'login') {
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            message = '電子郵件或密碼錯誤';
+          }
+        } else {
+          if (error.code === 'auth/weak-password') {
+            message = '密碼強度不足 (至少 6 個字元)';
+          } else if (error.code === 'auth/email-already-in-use') {
+            message = '這個 Email 已經被註冊了';
+          }
         }
       }
       setErrorMsg(message);
@@ -72,29 +84,17 @@ export default function Login({ isDarkMode }: LoginProps) {
     }
   }
 
-  // --- C. Email/Password 註冊 ---
+  // --- B. Email/Password 登入或註冊 ---
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const mode: AuthMode = isLoginMode ? 'login' : 'signup';
+    await handleAuth(mode);
+  }
+
   const handleSignUp = async () => {
-    setErrorMsg('');
-    setIsLoading(true);
-    try {
-      // 呼叫 Firebase 的註冊
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Firebase 註冊成功！');
-      // onLoginSuccess(); // 註冊後通常也會直接登入
-    } catch (error) {
-      console.error("註冊失敗:", error);
-      let message = '註冊失敗';
-      if (error instanceof FirebaseError) {
-        if (error.code === 'auth/weak-password') {
-          message = '密碼強度不足 (至少 6 個字元)';
-        } else if (error.code === 'auth/email-already-in-use') {
-          message = '這個 Email 已經被註冊了';
-        }
-      }
-      setErrorMsg(message);
-    } finally {
-      setIsLoading(false);
-    }
+    // 讓按鈕先切到註冊模式，再執行註冊，避免誤用登入錯誤訊息
+    setIsLoginMode(false);
+    await handleAuth('signup');
   }
 
   // --- C. Google 登入 ---

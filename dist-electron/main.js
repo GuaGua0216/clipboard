@@ -1,35 +1,53 @@
-import { app as t, BrowserWindow as l, clipboard as s } from "electron";
-import { fileURLToPath as p } from "node:url";
-import o from "node:path";
-const c = o.dirname(p(import.meta.url));
-process.env.APP_ROOT = o.join(c, "..");
-const r = process.env.VITE_DEV_SERVER_URL, m = o.join(process.env.APP_ROOT, "dist-electron"), d = o.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = r ? o.join(process.env.APP_ROOT, "public") : d;
-let e;
-function a() {
-  e = new l({
-    icon: o.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+import { app, BrowserWindow, clipboard } from "electron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = path.join(__dirname, "..");
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+let win;
+function createWindow() {
+  win = new BrowserWindow({
+    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: o.join(c, "preload.mjs")
+      preload: path.join(__dirname, "preload.mjs")
     }
-  }), e.setMenu(null), e.webContents.on("did-finish-load", () => {
+  });
+  win.setMenu(null);
+  win.webContents.on("did-finish-load", () => {
     console.log("Renderer 載入完成，開始監聽剪貼簿...");
-    let i = s.readText();
+    let previousText = clipboard.readText();
     setInterval(() => {
-      const n = s.readText();
-      n !== i && n.trim() !== "" && (i = n, console.log("偵測到剪貼簿變化:", n), e == null || e.webContents.send("clipboard-updated", n));
+      const currentText = clipboard.readText();
+      if (currentText !== previousText && currentText.trim() !== "") {
+        previousText = currentText;
+        console.log("偵測到剪貼簿變化:", currentText);
+        win == null ? void 0 : win.webContents.send("clipboard-updated", currentText);
+      }
     }, 1e3);
-  }), r ? e.loadURL(r) : e.loadFile(o.join(d, "index.html"));
+  });
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+  }
 }
-t.on("window-all-closed", () => {
-  process.platform !== "darwin" && (t.quit(), e = null);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
+  }
 });
-t.on("activate", () => {
-  l.getAllWindows().length === 0 && a();
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
-t.whenReady().then(a);
+app.whenReady().then(createWindow);
 export {
-  m as MAIN_DIST,
-  d as RENDERER_DIST,
-  r as VITE_DEV_SERVER_URL
+  MAIN_DIST,
+  RENDERER_DIST,
+  VITE_DEV_SERVER_URL
 };
