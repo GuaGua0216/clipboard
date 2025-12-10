@@ -1,9 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-import { getAuth } from "firebase/auth"; // 記得加入 getAuth
+import { Analytics, getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -16,15 +14,27 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  // 同時支援兩個變數名稱，避免拼錯造成頁面空白
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || import.meta.env.VITE_MEASUREMENT_ID
 };
 
 
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app); // 初始化 Firebase Authentication 並導出
-const db = getFirestore(app); // ⇐ 2. 初始化 Firestore
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 避免缺少 measurementId 或不支援 Analytics 時直接炸掉
+let analytics: Analytics | null = null;
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  try {
+    analytics = getAnalytics(app);
+  } catch (err) {
+    console.warn('Firebase Analytics 無法初始化，將略過。', err);
+  }
+} else if (!firebaseConfig.measurementId) {
+  console.warn('找不到 VITE_FIREBASE_MEASUREMENT_ID，Firebase Analytics 已停用。');
+}
 
 export { app, auth, analytics, db };
