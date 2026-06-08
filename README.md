@@ -1,30 +1,22 @@
-# React + TypeScript + Vite
+# 跨平台雲端剪貼簿同步工具 (Cross-Platform Clipboard Sync)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+這是一個專為解決跨平台文字傳輸痛點而設計的剪貼簿同步應用程式。預計支援 **Windows、macOS 以及 Android**，讓你不必再透過通訊軟體自己傳訊息給自己，也能輕鬆在不同裝置間共享剪貼簿內容。
 
-Currently, two official plugins are available:
+## 💡 為什麼需要這個 App？
+* **打破單次複製限制**：自動記錄你的剪貼簿歷史，不再因為下一次複製而遺失上一次的重要資訊。
+* **跨裝置無縫銜接**：在電腦上複製一段文字或連結，手機端就能立刻取得，徹底解決「電腦複製、手機無法貼上」的窘境。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ 核心功能
+* **電腦端（Windows / macOS）自動監聽**：應用程式於背景執行時，會自動監聽系統剪貼簿。只要你執行「複製 (Ctrl+C / Cmd+C)」，程式便會自動將每一次的內容上傳至雲端。
+* **手機端（Android）即時查閱與使用**：受限於 Android 系統的背景隱私安全限制，手機端雖不進行背景監聽，但使用者只需打開 App，就能直接瀏覽並一鍵複製所有從電腦端同步過來的歷史紀錄，實現高效的雙端資訊互通。
+* **即時同步技術**：利用雲端即時資料庫，確保不同裝置間的資料傳輸延遲極低。
 
-## Expanding the ESLint configuration
+## 🛠️ 技術棧 (Tech Stack)
+* **桌面端開發**：[Electron](https://www.electronjs.org/) — 負責建構跨平台（Windows, macOS）桌面應用，並調用系統底層 API 進行剪貼簿監聽。
+* **後端 / 資料庫**：[Firebase](https://firebase.google.com/) — 使用 Firebase Realtime Database 或 Cloud Firestore 進行資料的即時推送、同步與儲存。
+* **行動端**：Android 應用（可根據你實際使用的開發框架如 React Native / Flutter / Native Android 自行補充）。
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## 🚀 工作原理 (How it Works)
+1. **電腦端** 複製任意文字 ➡️ Electron 監聽事件觸發 ➡️ 自動將內容寫入 **Firebase 雲端資料庫**。
+2. **Firebase** 即時將資料變更推送至所有已連線的裝置。
+3. **手機端** 打開 App ➡️ 接收 Firebase 最新資料列表 ➡️ 使用者點擊所需項目即可直接複製使用。
